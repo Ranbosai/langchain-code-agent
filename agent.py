@@ -1,4 +1,4 @@
-agent.py"""Definition of the LangChain agent used in this project.
+"""Definition of the LangChain agent used in this project.
 
 The function `create_agent` returns an `AgentExecutor` configured with a chat
 model and the custom tools defined in `tools.py`.  It uses LangChain’s
@@ -10,10 +10,10 @@ from __future__ import annotations
 
 from typing import Optional
 
-from langchain.agents import AgentType, initialize_agent
 from langchain.chat_models import ChatOpenAI
-
-from . import tools  # import our custom tools
+import tools
+from langchain.agents import create_react_agent, AgentExecutor
+from langchain import hub
 
 
 def create_agent(model_name: Optional[str] = None, verbose: bool = False):
@@ -42,7 +42,7 @@ def create_agent(model_name: Optional[str] = None, verbose: bool = False):
     # Tool objects with a description taken from the docstring.  The agent
     # reads those descriptions to decide when to invoke a tool.
     available_tools = [
-        tools.write_code,
+        tools.generate_code,
         tools.explain_code,
     ]
 
@@ -50,11 +50,11 @@ def create_agent(model_name: Optional[str] = None, verbose: bool = False):
     # agent will consider the tool descriptions when deciding whether to use a
     # tool.  Setting ``handle_parsing_errors=True`` helps when the model
     # incorrectly formats tool calls.
-    agent_executor = initialize_agent(
+    prompt = hub.pull("hwchase17/react")
+    agent = create_react_agent(
         tools=available_tools,
         llm=llm,
-        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-        verbose=verbose,
-        handle_parsing_errors=True,
+        prompt=prompt,
     )
+    agent_executor = AgentExecutor(agent=agent, tools=available_tools, verbose=verbose)
     return agent_executor

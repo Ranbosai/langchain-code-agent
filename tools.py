@@ -1,8 +1,8 @@
 """Custom tools for the LangChain code agent.
 
-This module defines two tools: `write_code` and `explain_code`.  Each tool
+This module defines two tools: `generate_code` and `explain_code`.  Each tool
 wraps a call to a large language model via LangChain’s `ChatOpenAI` class.  The
-`write_code` tool generates source code for a specified task and programming
+`generate_code` tool generates source code for a specified task and programming
 language, while the `explain_code` tool provides a human‑readable explanation
 for a given code snippet.
 
@@ -43,26 +43,22 @@ def _get_chat_model(temperature: float = 0.0) -> ChatOpenAI:
 
 
 @tool
-def write_code(task: str, language: str, model_name: Optional[str] = None) -> str:
-    """Generate source code for a task in the given programming language.
+def generate_code(query: str, model_name: Optional[str] = None) -> str:
+    """Generate source code for a task in a given programming language.
 
     This tool formulates a prompt instructing the language model to produce
-    **only** the requested code.  The caller should specify what the code
-    should accomplish (e.g. "sort a list of numbers") and the target
-    programming language.  The underlying language model then returns code
-    without any explanation or formatting outside of the code block.
+    **only** the requested code. The input should be a string that contains the language and the task, separated by a comma.
 
     Args:
-        task: A description of the desired behaviour, such as
-            "compute the factorial of a number".
-        language: The programming language to use, for example "python",
-            "javascript" or "c++".
+        query: A comma-separated string containing the programming language and a
+            description of the desired behaviour. For example: "python,compute the factorial of a number".
         model_name: Optional override for the chat model to use.  If not
             provided, the `DEFAULT_MODEL_NAME` will be used.
 
     Returns:
         A string containing the generated source code.
     """
+    language, task = query.split(",", 1)
     chat_model = ChatOpenAI(model_name=model_name or DEFAULT_MODEL_NAME, temperature=0.0)
     system_prompt = (
         "You are an expert software engineer. "
